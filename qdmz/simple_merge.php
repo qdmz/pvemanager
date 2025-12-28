@@ -4,6 +4,10 @@
  * 将shujukufangzheli目录下的所有Excel文件合并到一个总表中
  */
 
+// 抑制PHP废弃警告和精度丢失警告
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+
 // 设置脚本执行时间限制
 ini_set('max_execution_time', 300); // 5分钟
 ini_set('memory_limit', '512M');
