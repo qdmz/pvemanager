@@ -66,24 +66,47 @@ if (!$excel->read($base_file)) {
     exit("无法读取基础文件: {$base_file}\n");
 }
 
-echo "基础文件读取成功，共 {$excel->rowcount} 行，{$excel->colcount} 列\n";
+// 检查Excel读取器是否正确加载
+if (!isset($excel->sheets) || !is_array($excel->sheets) || count($excel->sheets) == 0) {
+    exit("Excel读取器未正确加载文件: {$base_file}\n");
+}
+
+// 获取第一个工作表
+$sheet = $excel->sheets[0];
+
+// 重新定义val方法的辅助函数
+function getCellValue($excel, $row, $col) {
+    $sheet = $excel->sheets[0];
+    $cellKey = ($row - 1) . '_' . $col; // ExcelReader中行索引从0开始
+    
+    if (isset($sheet['cells'][$cellKey])) {
+        return $sheet['cells'][$cellKey];
+    }
+    return '';
+}
+
+// 获取行数和列数
+$rowcount = isset($sheet['numRows']) ? $sheet['numRows'] : 0;
+$colcount = isset($sheet['numCols']) ? $sheet['numCols'] : 0;
+
+echo "基础文件读取成功，共 {$rowcount} 行，{$colcount} 列\n";
 
 // 获取基础数据
 $base_data = [];
 $col_names = [];
 
 // 提取基础文件的列名
-for ($col = 0; $col < $excel->colcount; $col++) {
-    $col_names[] = $excel->val(1, $col);
+for ($col = 0; $col < $colcount; $col++) {
+    $col_names[] = getCellValue($excel, 1, $col);
 }
 
 echo "基础文件列名: " . implode(", ", $col_names) . "\n";
 
 // 提取基础文件的数据（跳过第一行列名）
-for ($row = 2; $row <= $excel->rowcount; $row++) {
+for ($row = 2; $row <= $rowcount; $row++) {
     $row_data = [];
-    for ($col = 0; $col < $excel->colcount; $col++) {
-        $row_data[] = $excel->val($row, $col);
+    for ($col = 0; $col < $colcount; $col++) {
+        $row_data[] = getCellValue($excel, $row, $col);
     }
     $base_data[] = $row_data;
 }
@@ -138,24 +161,29 @@ foreach ($files_to_merge as $file_path) {
         continue; // 跳过无法读取的文件
     }
     
-    echo "  - 文件包含 {$current_excel->rowcount} 行，{$current_excel->colcount} 列\n";
+    // 获取当前Excel文件的行数和列数
+    $current_sheet = $current_excel->sheets[0];
+    $current_rowcount = isset($current_sheet['numRows']) ? $current_sheet['numRows'] : 0;
+    $current_colcount = isset($current_sheet['numCols']) ? $current_sheet['numCols'] : 0;
+    
+    echo "  - 文件包含 {$current_rowcount} 行，{$current_colcount} 列\n";
     
     // 获取当前文件的数据
     $current_col_names = [];
     $current_data = [];
     
     // 提取当前文件的列名
-    for ($col = 0; $col < $current_excel->colcount; $col++) {
-        $current_col_names[] = $current_excel->val(1, $col);
+    for ($col = 0; $col < $current_colcount; $col++) {
+        $current_col_names[] = getCellValue($current_excel, 1, $col);
     }
     
     echo "  - 当前文件列名: " . implode(", ", $current_col_names) . "\n";
     
     // 提取当前文件的数据（跳过第一行列名）
-    for ($row = 2; $row <= $current_excel->rowcount; $row++) {
+    for ($row = 2; $row <= $current_rowcount; $row++) {
         $row_data = [];
-        for ($col = 0; $col < $current_excel->colcount; $col++) {
-            $row_data[] = $current_excel->val($row, $col);
+        for ($col = 0; $col < $current_colcount; $col++) {
+            $row_data[] = getCellValue($current_excel, $row, $col);
         }
         $current_data[] = $row_data;
     }
