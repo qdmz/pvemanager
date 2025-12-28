@@ -4,6 +4,9 @@
  * 使用项目中已验证的Excel读取机制
  */
 
+// 抑制PHP废弃警告和精度丢失警告
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 // 设置脚本执行时间限制
 ini_set('max_execution_time', 300); // 5分钟
 ini_set('memory_limit', '512M');
