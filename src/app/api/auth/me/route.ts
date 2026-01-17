@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     const [user] = await db.select().from(users).where(eq(users.id, decoded.userId));
 
     if (!user) {

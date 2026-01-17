@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Getting database connection...');
-    const db = getDb();
+    const db = await getDb();
 
     console.log('Checking if user exists...');
     // Check if user already exists

@@ -29,7 +29,7 @@ export async function POST(
       return NextResponse.json({ error: '缺少操作类型' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const vmId = parseInt(id);
 
     // Get VM details
@@ -254,7 +254,7 @@ export async function GET(
       return NextResponse.json({ error: 'Token 无效' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const vmId = parseInt(id);
 
     // Get VM details

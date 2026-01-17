@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token 无效' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const isAdmin = decoded.role === 'admin';
 
     // 基础统计
@@ -107,10 +107,10 @@ export async function GET(request: NextRequest) {
       };
 
       resourceUsage = {
-        cpu: resourceStats[0]?.totalCpu || 0,
-        memory: resourceStats[0]?.totalMemory || 0,
-        memoryGB: ((resourceStats[0]?.totalMemory || 0) / 1024).toFixed(2),
-        disk: resourceStats[0]?.totalDisk || 0,
+        cpu: Number(resourceStats[0]?.totalCpu || 0),
+        memory: Number(resourceStats[0]?.totalMemory || 0),
+        memoryGB: (Number(resourceStats[0]?.totalMemory || 0) / 1024).toFixed(2),
+        disk: Number(resourceStats[0]?.totalDisk || 0),
       };
     } else {
       // 普通用户只能看到自己的统计
@@ -175,10 +175,10 @@ export async function GET(request: NextRequest) {
       };
 
       resourceUsage = {
-        cpu: resourceStats[0]?.totalCpu || 0,
-        memory: resourceStats[0]?.totalMemory || 0,
-        memoryGB: ((resourceStats[0]?.totalMemory || 0) / 1024).toFixed(2),
-        disk: resourceStats[0]?.totalDisk || 0,
+        cpu: Number(resourceStats[0]?.totalCpu || 0),
+        memory: Number(resourceStats[0]?.totalMemory || 0),
+        memoryGB: (Number(resourceStats[0]?.totalMemory || 0) / 1024).toFixed(2),
+        disk: Number(resourceStats[0]?.totalDisk || 0),
       };
     }
 

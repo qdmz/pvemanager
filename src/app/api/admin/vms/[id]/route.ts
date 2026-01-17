@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: 'Token 无效' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const vmId = parseInt(id);
 
     // Get VM details
@@ -79,7 +79,7 @@ export async function PUT(
       rootPassword,
     } = body;
 
-    const db = getDb();
+    const db = await getDb();
     const vmId = parseInt(id);
 
     // Check if VM exists
@@ -139,7 +139,7 @@ export async function DELETE(
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const vmId = parseInt(id);
 
     // Get VM details

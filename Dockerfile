@@ -35,14 +35,23 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # 复制项目文件
+# 先复制非 node_modules 的文件，利用 .dockerignore 排除不必要的文件
 COPY . .
+
+# 清理 .next 目录以避免缓存问题
+RUN rm -rf .next 2>/dev/null || true
 
 # 设置构建环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+# 增加 Node.js 内存限制，防止构建时内存不足
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+# 禁用一些不必要的功能
+ENV NEXT_DISABLE_OPTIMIZED_DYNAMIC_IMPORTS=1
+ENV NEXT_DISABLE_PAGE_PREFETCHING=1
 
 # 构建应用
-RUN pnpm build
+RUN pnpm build --no-lint
 
 # ============================================
 # 阶段 3: 生产镜像

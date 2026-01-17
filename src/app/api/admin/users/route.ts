@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const allUsers = await db.select({
       id: users.id,
       username: users.username,

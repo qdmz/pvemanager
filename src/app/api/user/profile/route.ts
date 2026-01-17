@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token 无效' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const [user] = await db.select({
       id: users.id,
       username: users.username,
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const db = getDb();
+    const db = await getDb();
     const [user] = await db.select().from(users).where(eq(users.id, decoded.userId));
 
     if (!user) {

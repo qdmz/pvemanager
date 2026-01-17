@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token 无效' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const userId = decoded.userId;
 
     // VM 统计
@@ -89,10 +89,10 @@ export async function GET(request: NextRequest) {
           expiring: expiringVMs.length,
         },
         resource: {
-          cpu: resourceStats[0]?.totalCpu || 0,
-          memory: resourceStats[0]?.totalMemory || 0,
-          memoryGB: ((resourceStats[0]?.totalMemory || 0) / 1024).toFixed(2),
-          disk: resourceStats[0]?.totalDisk || 0,
+          cpu: Number(resourceStats[0]?.totalCpu || 0),
+          memory: Number(resourceStats[0]?.totalMemory || 0),
+          memoryGB: (Number(resourceStats[0]?.totalMemory || 0) / 1024).toFixed(2),
+          disk: Number(resourceStats[0]?.totalDisk || 0),
         },
       },
       recentOperations,

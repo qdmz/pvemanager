@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const now = new Date();
 
     // 查找所有已到期且设置了自动关机的虚拟机
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const searchParams = request.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '7');
 

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const servers = await db.select().from(pveServers).orderBy(pveServers.createdAt);
 
     return NextResponse.json({ success: true, servers });
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少必要字段' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const [newServer] = await db.insert(pveServers).values({
       name,
       host,

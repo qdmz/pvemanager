@@ -21,7 +21,7 @@ export async function GET(
       return NextResponse.json({ error: 'Token 无效' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
 
     // Get virtual machine details
     const [vm] = await db

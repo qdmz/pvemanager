@@ -29,7 +29,7 @@ export async function POST(
       return NextResponse.json({ error: '缺少资源配置类型' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const vmId = parseInt(id);
 
     // Get VM details

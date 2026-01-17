@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
 
     // Find user by username
     const [user] = await db.select().from(users).where(eq(users.username, username));

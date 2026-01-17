@@ -263,7 +263,7 @@ export class PVEClient {
 }
 
 export async function getPVEClient(serverId: number): Promise<PVEClient> {
-  const db = getDb();
+  const db = await getDb();
   const [server] = await db.select().from(pveServers).where(eq(pveServers.id, serverId));
 
   if (!server) {
