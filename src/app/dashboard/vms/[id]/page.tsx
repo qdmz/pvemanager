@@ -373,7 +373,96 @@ export default function VMDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Expiry */}
+        {/* Advanced Operations */}
+        <Card>
+          <CardHeader>
+            <CardTitle>高级操作</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {vm.type === 'ct' && (
+              <>
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">重置 Root 密码</p>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      const newPassword = prompt('请输入新密码:');
+                      if (!newPassword) return;
+                      try {
+                        const response = await fetch(`/api/vms/${vm.id}/advanced`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'reset_password',
+                            data: { newPassword },
+                          }),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.error);
+                        alert('密码重置成功');
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : '重置失败');
+                      }
+                    }}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    重置密码
+                  </Button>
+                </div>
+              </>
+            )}
+
+            <div>
+              <p className="text-muted-foreground text-sm mb-2">SSH 连接信息</p>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/vms/${vm.id}/advanced`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'get_ssh_info' }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+                    const sshInfo = data.result;
+                    alert(`SSH 连接信息:\n地址: ${sshInfo.ipAddress}\n端口: ${sshInfo.port}\n用户: ${sshInfo.username}\n密码: ${sshInfo.password}`);
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : '获取失败');
+                  }
+                }}
+              >
+                <Terminal className="mr-2 h-4 w-4" />
+                获取 SSH 信息
+              </Button>
+            </div>
+
+            <div>
+              <p className="text-muted-foreground text-sm mb-2">VNC 控制台</p>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/vms/${vm.id}/advanced`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'get_console' }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+                    const consoleInfo = data.result;
+                    alert(`VNC 连接信息:\n主机: ${consoleInfo.host}\n端口: ${consoleInfo.port}\nTicket: ${consoleInfo.ticket}`);
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : '获取失败');
+                  }
+                }}
+              >
+                <MonitorPlay className="mr-2 h-4 w-4" />
+                获取 VNC 信息
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>到期时间</CardTitle>

@@ -6,20 +6,40 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Server, 
-  Power, 
-  PowerOff, 
-  RefreshCw, 
+import {
+  Server,
+  Power,
+  PowerOff,
+  RefreshCw,
   AlertTriangle,
   Plus,
   Calendar,
   HardDrive,
   Cpu,
-  Monitor
+  Monitor,
+  Users,
+  Activity,
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { toast } from 'sonner';
+
+interface Stats {
+  vm: {
+    total: number;
+    running: number;
+    stopped: number;
+    paused: number;
+    expiring: number;
+  };
+  resource: {
+    cpu: number;
+    memory: number;
+    memoryGB: string;
+    disk: number;
+  };
+}
 
 interface VirtualMachine {
   id: number;
@@ -40,29 +60,60 @@ interface VirtualMachine {
 export default function DashboardPage() {
   const router = useRouter();
   const [vms, setVms] = useState<VirtualMachine[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchVMs();
+    fetchDashboardData();
   }, []);
 
-  const fetchVMs = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/vms');
-      if (!response.ok) {
-        if (response.status === 401) {
+      setLoading(true);
+      const [vmsResponse, statsResponse] = await Promise.all([
+        fetch('/api/vms'),
+        fetch('/api/dashboard/stats'),
+      ]);
+
+      if (!vmsResponse.ok || !statsResponse.ok) {
+        if (vmsResponse.status === 401 || statsResponse.status === 401) {
           router.push('/login');
           return;
         }
-        throw new Error('获取虚拟机列表失败');
+        throw new Error('获取数据失败');
       }
-      const data = await response.json();
-      setVms(data.vms || []);
+
+      const vmsData = await vmsResponse.json();
+      const statsData = await statsResponse.json();
+
+      setVms(vmsData.vms || []);
+      setStats(statsData.stats);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取虚拟机列表失败');
+      setError(err instanceof Error ? err.message : '获取数据失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOperation = async (vmId: number, operation: string) => {
+    try {
+      const response = await fetch(`/api/vms/${vmId}/operations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '操作失败');
+      }
+
+      toast.success(data.message || '操作成功');
+      fetchDashboardData(); // Refresh data
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '操作失败');
     }
   };
 
@@ -125,7 +176,7 @@ export default function DashboardPage() {
             管理您的虚拟机和容器
           </p>
         </div>
-        <Button>
+        <Button onClick={() => router.push('/dashboard/vms/new')}>
           <Plus className="mr-2 h-4 w-4" />
           新建虚拟机
         </Button>
@@ -134,6 +185,57 @@ export default function DashboardPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {error}
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">虚拟机总数</CardTitle>
+              <Server className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.vm.total}</div>
+              <p className="text-xs text-muted-foreground">
+                运行中: {stats.vm.running} | 已停止: {stats.vm.stopped}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">CPU 使用</CardTitle>
+              <Cpu className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.resource.cpu}</div>
+              <p className="text-xs text-muted-foreground">核心</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">内存使用</CardTitle>
+              <Monitor className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.resource.memoryGB}</div>
+              <p className="text-xs text-muted-foreground">GB</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">即将到期</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.vm.expiring}</div>
+              <p className="text-xs text-muted-foreground">7天内到期</p>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -213,20 +315,31 @@ export default function DashboardPage() {
                 <div className="flex gap-2 pt-2">
                   {vm.status === 'running' ? (
                     <>
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleOperation(vm.id, 'restart')}
+                      >
                         <RefreshCw className="mr-1 h-3 w-3" />
                         重启
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleOperation(vm.id, 'shutdown')}
+                      >
                         <PowerOff className="mr-1 h-3 w-3" />
                         关机
                       </Button>
                     </>
                   ) : (
-                    <Button 
-                      size="sm" 
-                      className="flex-1" 
+                    <Button
+                      size="sm"
+                      className="flex-1"
                       disabled={expired}
+                      onClick={() => !expired && handleOperation(vm.id, 'start')}
                     >
                       <Power className="mr-1 h-3 w-3" />
                       {expired ? '已到期' : '启动'}
@@ -252,7 +365,7 @@ export default function DashboardPage() {
             <p className="text-muted-foreground text-center mb-4">
               您还没有任何虚拟机或容器
             </p>
-            <Button>
+            <Button onClick={() => router.push('/dashboard/vms/new')}>
               <Plus className="mr-2 h-4 w-4" />
               创建虚拟机
             </Button>

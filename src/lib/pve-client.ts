@@ -160,6 +160,106 @@ export class PVEClient {
       method: 'DELETE',
     });
   }
+
+  async resetCTPassword(node: string, vmid: number, password: string): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 'rootfs-pw': password }),
+    });
+  }
+
+  async cloneVM(node: string, vmid: number, newId: number, name: string, full?: boolean): Promise<any> {
+    return this.request(`/nodes/${node}/qemu/${vmid}/clone`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        newid: newId,
+        name,
+        full: full || false,
+      }),
+    });
+  }
+
+  async cloneCT(node: string, vmid: number, newId: number, hostname: string, full?: boolean): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/clone`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        newid: newId,
+        hostname,
+        full: full || false,
+      }),
+    });
+  }
+
+  async resizeDisk(node: string, vmid: number, disk: string, size: string): Promise<any> {
+    return this.request(`/nodes/${node}/qemu/${vmid}/resize`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        disk,
+        size,
+      }),
+    });
+  }
+
+  async resizeCTDisk(node: string, vmid: number, size: string): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/resize`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rootfs: size,
+      }),
+    });
+  }
+
+  async moveDisk(node: string, vmid: number, disk: string, storage: string): Promise<any> {
+    return this.request(`/nodes/${node}/qemu/${vmid}/move_disk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        disk,
+        storage,
+      }),
+    });
+  }
+
+  async execCommand(node: string, vmid: number, command: string): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/exec`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        command: command.split(' '),
+      }),
+    });
+  }
+
+  async getTermProxy(node: string, vmid: number): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/termproxy`, {
+      method: 'POST',
+    });
+  }
+
+  async getVMConsole(node: string, vmid: number): Promise<any> {
+    return this.request(`/nodes/${node}/qemu/${vmid}/vncproxy`, {
+      method: 'POST',
+    });
+  }
+
+  async getCTConsole(node: string, vmid: number): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/vncproxy`, {
+      method: 'POST',
+    });
+  }
+
+  async getNetworkInterfaces(node: string, vmid: number): Promise<any> {
+    return this.request(`/nodes/${node}/lxc/${vmid}/config`);
+  }
+
+  async getVMNetworkConfig(node: string, vmid: number): Promise<any> {
+    return this.request(`/nodes/${node}/qemu/${vmid}/config`);
+  }
 }
 
 export async function getPVEClient(serverId: number): Promise<PVEClient> {
