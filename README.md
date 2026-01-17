@@ -1,6 +1,6 @@
 # PVE 管理系统
 
-一个功能完整的 Proxmox VE 服务器管理系统，支持用户注册登录、虚拟机管理、到期时间控制等功能。
+一个功能完整的 Proxmox VE 服务器管理系统，支持用户注册登录、虚拟机管理、到期时间控制、Webshell/VNC 访问等功能。
 
 ## 功能特性
 
@@ -13,21 +13,39 @@
 - ✅ NAT 端口转发显示
 - ✅ 到期时间管理（到期后不可操作）
 - ✅ 修改个人资料和密码
-- 🚧 Webshell/VNC 访问（待开发）
-- 🚧 虚拟机密码重置（待开发）
-- 🚧 虚拟机重装系统（待开发）
+- ✅ **虚拟机高级操作**
+  - 重置虚拟机密码
+  - 重装系统
+  - 获取 SSH 连接信息
+  - Webshell/VNC 访问
+- ✅ **虚拟机硬件配置**
+  - 调整 CPU 核心数
+  - 调整内存大小
+  - 调整磁盘大小
+  - 配置网络接口
+  - 配置 IP 地址
+- ✅ **统计面板**
+  - 虚拟机状态概览
+  - 资源使用统计
 
 ### 管理员功能
 - ✅ PVE 服务器管理（添加、编辑、删除服务器连接）
 - ✅ 用户管理（查看用户列表、编辑用户）
 - ✅ 虚拟机全量管理
   - 查看所有虚拟机
+  - 创建新虚拟机（克隆模板）
   - 修改虚拟机归属
   - 设置到期日期
   - 设置虚拟机配置（CPU、内存、磁盘等）
-- 🚧 创建新虚拟机（待开发）
-- 🚧 虚拟机硬件配置（待开发）
-- 🚧 统计数据面板（待开发）
+  - 删除虚拟机
+- ✅ 虚拟机硬件配置（CPU、内存、硬盘、网卡、IP配置）
+- ✅ 统计数据面板
+  - 系统总览（用户数、虚拟机数、服务器数）
+  - 资源使用情况
+  - 到期虚拟机统计
+- ✅ 到期管理
+  - 查看待关机虚拟机列表
+  - 到期自动关机（支持定时任务）
 
 ## 技术栈
 
@@ -39,6 +57,7 @@
 - **ORM**: Drizzle ORM
 - **认证**: JWT + bcrypt
 - **HTTP 客户端**: Fetch API
+- **SDK**: coze-coding-dev-sdk (数据库连接)
 
 ## 数据库表结构
 
@@ -100,6 +119,54 @@
 - description: 描述
 - updated_at: 更新时间
 
+## 核心 PVE API 封装
+
+项目封装了完整的 PVE API 客户端 (`src/lib/pve-client.ts`)，支持以下功能：
+
+### 基础 API
+- ✅ 获取节点列表
+- ✅ 获取虚拟机列表
+- ✅ 获取虚拟机状态
+- ✅ 获取虚拟机配置
+
+### 虚拟机操作
+- ✅ 启动虚拟机 (`startVM`)
+- ✅ 停止虚拟机 (`stopVM`)
+- ✅ 重启虚拟机 (`rebootVM`)
+- ✅ 关机虚拟机 (`shutdownVM`)
+- ✅ 克隆虚拟机 (`cloneVM`)
+
+### 配置管理
+- ✅ 更新虚拟机配置 (`updateVMConfig`)
+- ✅ 调整 CPU (`resizeCPU`)
+- ✅ 调整内存 (`resizeMemory`)
+- ✅ 调整磁盘大小 (`resizeDisk`)
+- ✅ 移动磁盘 (`moveDisk`)
+
+### 网络配置
+- ✅ 获取网络接口列表 (`getNetworkInterfaces`)
+- ✅ 获取 IP 配置 (`getIPConfig`)
+- ✅ 更新网络配置 (`updateNetworkConfig`)
+
+### 容器操作
+- ✅ 启动容器 (`startCT`)
+- ✅ 停止容器 (`stopCT`)
+- ✅ 重启容器 (`rebootCT`)
+- ✅ 关机容器 (`shutdownCT`)
+
+### 命令执行
+- ✅ 执行 Shell 命令 (`execCommand`)
+
+### 访问接口
+- ✅ Termproxy 代理 (`termproxy`)
+- ✅ VNC 代理 (`vncproxy`)
+- ✅ 获取 VNC WebSocket 地址 (`getVncWebSocket`)
+
+### 密码与重装
+- ✅ 设置云主机密码 (`setUserPassword`)
+- ✅ 设置 Root 密码 (`setRootPassword`)
+- ✅ 重装系统 (`reinstall`)
+
 ## 快速开始
 
 ### 环境要求
@@ -149,6 +216,67 @@ npx next build
 pnpm run start
 ```
 
+## 定时任务配置
+
+### 到期虚拟机检查
+
+系统提供了自动检查并关机到期虚拟机的功能。你可以使用以下方式配置定时任务：
+
+#### 1. 使用 cron 定时任务（推荐）
+
+在服务器上添加 cron 任务，每天凌晨执行一次：
+
+```bash
+# 编辑 crontab
+crontab -e
+
+# 添加以下行（每天凌晨 2 点执行）
+0 2 * * * curl -X GET http://localhost:5000/api/system/check-expiry
+```
+
+#### 2. 使用 systemd timer
+
+创建 `/etc/systemd/system/pve-check-expiry.service`:
+
+```ini
+[Unit]
+Description=PVE Manager Check Expiry
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/curl -X GET http://localhost:5000/api/system/check-expiry
+```
+
+创建 `/etc/systemd/system/pve-check-expiry.timer`:
+
+```ini
+[Unit]
+Description=PVE Manager Check Expiry Timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+启用服务：
+
+```bash
+sudo systemctl enable pve-check-expiry.timer
+sudo systemctl start pve-check-expiry.timer
+```
+
+## 安全建议
+
+1. **JWT Secret**: 生产环境务必修改 `JWT_SECRET`，使用强密码
+2. **HTTPS**: 生产环境请配置 HTTPS，使用反向代理（如 Nginx）
+3. **数据库**: 确保数据库仅允许本地访问或使用强密码
+4. **PVE API Token**: 使用权限受限的 PVE API Token，避免使用 root 账号
+5. **备份**: 定期备份数据库数据
+
 ## API 路由
 
 ### 认证相关
@@ -165,12 +293,33 @@ pnpm run start
 - `GET /api/vms` - 获取当前用户的虚拟机列表
 - `GET /api/vms/[id]` - 获取虚拟机详情
 - `POST /api/vms/[id]/operations` - 执行虚拟机操作（启动/停止/重启/关机）
+- `POST /api/vms/[id]/advanced` - 虚拟机高级操作
+  - 重置密码
+  - 重装系统
+  - 获取 SSH 信息
+  - 启动 Webshell
+  - 启动 VNC
+
+### 系统管理
+- `GET /api/system/check-expiry` - 检查并处理到期虚拟机（定时任务）
+
+### 统计数据
+- `GET /api/dashboard/stats` - 用户仪表盘统计数据
+- `GET /api/admin/stats` - 管理员后台统计数据
 
 ### 管理员相关
 - `GET /api/admin/servers` - 获取 PVE 服务器列表
 - `POST /api/admin/servers` - 添加 PVE 服务器
 - `GET /api/admin/users` - 获取用户列表
 - `GET /api/admin/vms` - 获取所有虚拟机列表
+- `PUT /api/admin/vms/[id]` - 更新虚拟机配置
+- `DELETE /api/admin/vms/[id]` - 删除虚拟机
+- `POST /api/admin/vms/[id]/reconfigure` - 虚拟机硬件配置
+  - 调整 CPU
+  - 调整内存
+  - 调整磁盘
+  - 配置网络
+  - 配置 IP
 
 ## 项目结构
 
@@ -179,7 +328,25 @@ pve-manager/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── api/               # API 路由
+│   │   │   ├── auth/         # 认证相关
+│   │   │   ├── user/         # 用户相关
+│   │   │   ├── vms/          # 虚拟机相关
+│   │   │   │   └── [id]/     # 虚拟机操作
+│   │   │   │       ├── advanced/    # 高级操作
+│   │   │   │       └── operations/ # 基本操作
+│   │   │   ├── admin/        # 管理员相关
+│   │   │   │   ├── servers/  # 服务器管理
+│   │   │   │   ├── users/    # 用户管理
+│   │   │   │   ├── vms/      # 虚拟机管理
+│   │   │   │   │   └── [id]/ # 虚拟机配置
+│   │   │   │   └── stats/    # 统计数据
+│   │   │   ├── dashboard/    # 仪表盘统计
+│   │   │   └── system/       # 系统管理
+│   │   │       └── check-expiry/  # 到期检查
 │   │   ├── dashboard/         # 用户仪表盘
+│   │   │   ├── vms/         # 虚拟机管理
+│   │   │   │   └── [id]/    # 虚拟机详情
+│   │   │   └── page.tsx     # 仪表盘主页
 │   │   ├── admin/             # 管理员后台
 │   │   ├── settings/          # 个人设置
 │   │   ├── login/             # 登录页
@@ -199,6 +366,61 @@ pve-manager/
 ├── .env.local               # 环境变量
 └── package.json             # 项目依赖
 ```
+
+## 开发注意事项
+
+### 数据库连接
+
+项目使用 `coze-coding-dev-sdk` 的 `getDb()` 函数获取数据库连接，确保连接池的正确管理。在所有 API 路由中，使用以下方式获取数据库实例：
+
+```typescript
+import { getDb } from 'coze-coding-dev-sdk';
+
+const db = await getDb();
+// 使用 db 进行数据库操作
+```
+
+### 虚拟机操作状态
+
+虚拟机操作是异步的，操作状态记录在 `vm_operations` 表中。前端可以通过轮询或 WebSocket 获取操作状态更新。
+
+### NAT 端口转发
+
+NAT 端口转发配置以 JSONB 格式存储在虚拟机表中，格式如下：
+
+```json
+{
+  "80": "8080",
+  "443": "8443",
+  "22": "2222"
+}
+```
+
+表示外部端口 8080 映射到虚拟机的 80 端口，依此类推。
+
+## 常见问题
+
+### Q: 虚拟机到期后无法启动？
+
+A: 这是预期行为。到期虚拟机会自动禁止启动、停止、重启等操作。如需恢复，请联系管理员延长到期时间。
+
+### Q: Webshell/VNC 无法连接？
+
+A: 请确保：
+1. 虚拟机状态为 "running"
+2. PVE 服务器的防火墙允许相关端口
+3. 网络连接正常
+
+### Q: 如何批量导入虚拟机？
+
+A: 可以通过管理员后台的 PVE 服务器同步功能，批量导入现有虚拟机。
+
+### Q: 定时任务未生效？
+
+A: 请检查：
+1. `/api/system/check-expiry` 接口是否可正常访问
+2. cron 或 systemd 服务是否正常运行
+3. 日志中是否有错误信息```
 
 ## 待开发功能
 
