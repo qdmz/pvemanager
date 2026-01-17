@@ -1,48 +1,77 @@
 version: '3.8'
 
+# ============================================
+# PVE Manager - Docker Compose 配置
+# ============================================
+# 使用说明:
+# 1. 复制 .env.example 到 .env 并配置环境变量
+# 2. 运行: docker-compose up -d
+# 3. 查看日志: docker-compose logs -f
+
 services:
+  # ============================================
   # PVE Manager 应用
+  # ============================================
   app:
-    build: .
-    container_name: pve-manager
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: pve-manager-app
+    restart: unless-stopped
     ports:
-      - "${PORT:-5000}:5000"
+      - "${APP_PORT:-5000}:5000"
     environment:
+      # 应用配置
       - NODE_ENV=production
       - PORT=5000
-      - DATABASE_URL=postgresql://pve_user:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - HOSTNAME=0.0.0.0
+
+      # 数据库配置
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pve_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pve_manager}
+
+      # JWT 配置
       - JWT_SECRET=${JWT_SECRET}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+
+      # 应用 URL
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:5000}
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
     networks:
       - pve-network
     volumes:
+      # 日志持久化
       - ./logs:/app/logs
+      # 可选: 挂载静态文件
+      # - ./uploads:/app/uploads
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/test"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  # ============================================
   # PostgreSQL 数据库
+  # ============================================
   postgres:
     image: postgres:16-alpine
-    container_name: pve-postgres
+    container_name: pve-manager-postgres
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-pve_manager}
       - POSTGRES_USER=${POSTGRES_USER:-pve_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
+      # 数据持久化
       - postgres-data:/var/lib/postgresql/data
+      # 初始化脚本（可选）
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
-    restart: unless-stopped
     networks:
       - pve-network
     healthcheck:
@@ -50,6 +79,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # PostgreSQL 性能优化
     command: >
       postgres
       -c max_connections=200
@@ -65,10 +95,34 @@ services:
       -c min_wal_size=1GB
       -c max_wal_size=4GB
 
+  # ============================================
+  # 定时任务容器 - 到期检查
+  # ============================================
+  cron:
+    image: alpine:latest
+    container_name: pve-manager-cron
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      - pve-network
+    # 使用 Alpine 的 cron 服务，每天凌晨 2 点执行到期检查
+    command: >
+      sh -c "echo '0 2 * * * wget -qO- http://app:5000/api/system/check-expiry' > /etc/crontabs/root &&
+             crond -f -l 2"
+    healthcheck:
+      test: ["CMD", "pgrep", "crond"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
   # Nginx 反向代理（可选）
+  # ============================================
   nginx:
     image: nginx:alpine
-    container_name: pve-nginx
+    container_name: pve-manager-nginx
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -79,20 +133,33 @@ services:
       - nginx-cache:/var/cache/nginx
     depends_on:
       - app
-    restart: unless-stopped
     networks:
       - pve-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - with-nginx  # 使用 --profile with-nginx 启用
 
+  # ============================================
   # Redis 缓存（可选，用于会话和缓存）
+  # ============================================
   redis:
     image: redis:7-alpine
-    container_name: pve-redis
+    container_name: pve-manager-redis
+    restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-default_redis_password}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
     networks:
       - pve-network
     healthcheck:
@@ -100,18 +167,34 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    profiles:
+      - with-redis  # 使用 --profile with-redis 启用
 
+# ============================================
+# 数据卷
+# ============================================
 volumes:
   postgres-data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/postgres
+
   nginx-cache:
     driver: local
+
   redis-data:
     driver: local
 
+# ============================================
+# 网络
+# ============================================
 networks:
   pve-network:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: br-pve-manager

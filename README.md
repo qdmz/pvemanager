@@ -209,6 +209,137 @@ npx next dev --port 5000
 
 访问 http://localhost:5000
 
+### Docker 部署（推荐生产环境）
+
+#### 1. 使用 Docker Compose（推荐）
+
+##### 配置环境变量
+
+创建 `.env` 文件：
+
+```env
+# 应用配置
+APP_PORT=5000
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+JWT_SECRET=your-super-secret-jwt-key-change-this
+
+# 数据库配置
+POSTGRES_DB=pve_manager
+POSTGRES_USER=pve_user
+POSTGRES_PASSWORD=your-strong-postgres-password
+POSTGRES_PORT=5432
+
+# Redis 配置（可选）
+REDIS_PASSWORD=your-strong-redis-password
+REDIS_PORT=6379
+```
+
+##### 启动服务
+
+```bash
+# 基础部署（应用 + PostgreSQL + 定时任务）
+docker-compose up -d
+
+# 完整部署（包含 Nginx + Redis）
+docker-compose --profile with-nginx --profile with-redis up -d
+
+# 查看日志
+docker-compose logs -f app
+
+# 停止服务
+docker-compose down
+
+# 停止并删除数据卷（慎用）
+docker-compose down -v
+```
+
+#### 2. 使用 Docker 单独部署
+
+##### 构建镜像
+
+```bash
+docker build -t pve-manager:latest .
+```
+
+##### 运行容器
+
+```bash
+docker run -d \
+  --name pve-manager \
+  -p 5000:5000 \
+  -e DATABASE_URL=postgresql://pve_user:password@postgres:5432/pve_manager \
+  -e JWT_SECRET=your-secret-key \
+  -e NEXT_PUBLIC_APP_URL=https://your-domain.com \
+  --link postgres:postgres \
+  pve-manager:latest
+```
+
+#### 3. Docker 配置说明
+
+##### Dockerfile 特性
+
+- **多阶段构建**: 分离依赖安装、构建和运行阶段，减小镜像体积
+- **安全性**: 使用非 root 用户运行应用
+- **健康检查**: 自动检测应用运行状态
+- **优雅退出**: 使用 dumb-init 处理信号
+
+##### docker-compose.yml 服务
+
+- **app**: 主应用服务
+- **postgres**: PostgreSQL 数据库
+- **cron**: 定时任务服务（每天凌晨 2 点检查到期虚拟机）
+- **nginx**: 反向代理（可选，使用 `--profile with-nginx` 启用）
+- **redis**: 缓存服务（可选，使用 `--profile with-redis` 启用）
+
+##### 持久化存储
+
+- PostgreSQL 数据存储在 `./data/postgres` 目录
+- 应用日志存储在 `./logs` 目录
+
+#### 4. 生产环境建议
+
+##### 使用 Nginx 反向代理
+
+启用 Nginx 服务并配置 SSL 证书：
+
+```bash
+# 放置 SSL 证书
+mkdir -p config/nginx/ssl
+cp your-cert.pem config/nginx/ssl/
+cp your-key.pem config/nginx/ssl/
+
+# 启动完整服务
+docker-compose --profile with-nginx up -d
+```
+
+##### 资源限制
+
+在 `docker-compose.yml` 中添加资源限制：
+
+```yaml
+app:
+  deploy:
+    resources:
+      limits:
+        cpus: '2'
+        memory: 2G
+      reservations:
+        cpus: '1'
+        memory: 1G
+```
+
+##### 数据备份
+
+```bash
+# 备份 PostgreSQL 数据
+docker-compose exec postgres pg_dump -U pve_user pve_manager > backup.sql
+
+# 恢复数据
+docker-compose exec -T postgres psql -U pve_user pve_manager < backup.sql
+```
+
+访问 http://localhost:5000
+
 ### 构建生产版本
 
 ```bash
