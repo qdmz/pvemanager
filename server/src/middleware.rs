@@ -3,9 +3,8 @@ use axum::{
     http::StatusCode,
     middleware::Next,
     response::Response,
-    Json,
 };
-use jsonwebtoken::{decode, Validation, DecodingKey};
+use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde_json::json;
 
 use crate::config::Config;

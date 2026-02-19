@@ -1,15 +1,17 @@
 use axum::{
-    extract::{State, Path, Extension},
-    Json,
+    extract::{Path, State},
     http::StatusCode,
+    Json,
 };
 use uuid::Uuid;
 use validator::Validate;
 
 use crate::db::DbPool;
-use crate::services::{VmService, AuditService};
+use crate::services::{AuditService, VmService};
 use pve_shared::{
-    dtos::{CreateVmRequest, VmActionRequest, UpdateVmRequest, CreateSnapshotRequest, ApiResponse},
+    dtos::{
+        ApiResponse, CreateSnapshotRequest, CreateVmRequest, UpdateVmRequest, VmActionRequest,
+    },
     error::{AppError, Result},
     models::{VirtualMachine, VmSnapshot},
 };

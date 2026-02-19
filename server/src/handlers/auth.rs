@@ -1,18 +1,18 @@
 use axum::{
-    extract::{State, Extension},
-    Json,
+    extract::{State},
     http::StatusCode,
+    Json,
 };
-use jsonwebtoken::{encode, Header, EncodingKey};
 use chrono::{Duration, Utc};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::config::Config;
 use crate::db::DbPool;
 use crate::services::AuthService;
-use crate::config::Config;
 use pve_shared::{
-    dtos::{LoginRequest, RegisterRequest, AuthResponse, UserInfo},
+    dtos::{AuthResponse, LoginRequest, RegisterRequest, UserInfo},
     error::{AppError, Result},
 };
 

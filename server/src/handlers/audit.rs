@@ -1,5 +1,5 @@
 use axum::{
-    extract::{State, Query, Extension},
+    extract::{Query, State},
     Json,
 };
 use serde::Deserialize;

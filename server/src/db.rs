@@ -1,5 +1,5 @@
-use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use pve_shared::error::Result;
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 pub type DbPool = Pool<Postgres>;
 

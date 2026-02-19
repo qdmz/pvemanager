@@ -1,12 +1,12 @@
+use bcrypt::{hash, verify, DEFAULT_COST};
+use chrono::Utc;
 use crate::db::DbPool;
 use pve_shared::{
     error::{AppError, Result},
-    models::{User, UserRole, VirtualMachine, VmSnapshot, AuditLog, FirewallRule},
+    models::{AuditLog, FirewallRule, User, UserRole, VirtualMachine, VmSnapshot},
 };
-use uuid::Uuid;
-use bcrypt::{hash, verify, DEFAULT_COST};
-use chrono::Utc;
 use sqlx::Postgres;
+use uuid::Uuid;
 
 pub struct AuthService;
 pub struct VmService;

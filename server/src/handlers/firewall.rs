@@ -1,12 +1,12 @@
 use axum::{
-    extract::{State, Path, Extension},
+    extract::{Path, State},
     Json,
 };
 use uuid::Uuid;
 
 use crate::db::DbPool;
 use pve_shared::{
-    dtos::{CreateFirewallRuleRequest, ApiResponse},
+    dtos::{ApiResponse, CreateFirewallRuleRequest},
     error::Result,
     models::FirewallRule,
 };
