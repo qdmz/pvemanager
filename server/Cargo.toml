@@ -1,7 +1,7 @@
 [package]
 name = "pve-server"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 # Workspace dependencies
@@ -23,7 +23,9 @@ bcrypt.workspace = true
 reqwest.workspace = true
 config.workspace = true
 once_cell.workspace = true
+pve-shared = { path = "../shared" }
 
 # Additional dependencies
 async-trait = "0.1"
 validator = { version = "0.16", features = ["derive"] }
+

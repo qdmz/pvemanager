@@ -1,13 +1,12 @@
-[package]
-name = "pve-manager"
-version = "0.1.0"
-edition = "2021"
-
 [workspace]
 members = [
     "server",
     "shared",
 ]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
 
 [workspace.dependencies]
 tokio = { version = "1.35", features = ["full"] }
@@ -28,3 +27,4 @@ bcrypt = "0.15"
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
 config = "0.14"
 once_cell = "1.19"
+
