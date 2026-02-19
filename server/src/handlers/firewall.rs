@@ -1,8 +1,4 @@
-use axum::{
-    extract::{Path, State},
-    Json,
-};
-use uuid::Uuid;
+use axum::{extract::Path, http::StatusCode, Json};
 
 use crate::db::DbPool;
 use pve_shared::{
@@ -10,6 +6,7 @@ use pve_shared::{
     error::Result,
     models::FirewallRule,
 };
+use uuid::Uuid;
 
 pub async fn list_firewall_rules(
     State(pool): State<DbPool>,

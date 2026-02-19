@@ -1,13 +1,8 @@
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    Json,
-};
-use uuid::Uuid;
-use validator::Validate;
+use axum::{extract::Path, http::StatusCode, Json};
 
 use crate::db::DbPool;
 use crate::services::{AuditService, VmService};
+use chrono::Utc;
 use pve_shared::{
     dtos::{
         ApiResponse, CreateSnapshotRequest, CreateVmRequest, UpdateVmRequest, VmActionRequest,
@@ -15,6 +10,8 @@ use pve_shared::{
     error::{AppError, Result},
     models::{VirtualMachine, VmSnapshot},
 };
+use uuid::Uuid;
+use validator::Validate;
 
 pub async fn list_vms(
     State(pool): State<DbPool>,

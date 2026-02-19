@@ -1,8 +1,4 @@
-use axum::{
-    extract::{Query, State},
-    Json,
-};
-use serde::Deserialize;
+use axum::{extract::Query, Json};
 
 use crate::db::DbPool;
 use pve_shared::{
@@ -10,6 +6,7 @@ use pve_shared::{
     error::Result,
     models::AuditLog,
 };
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct AuditQuery {

@@ -5,10 +5,7 @@ mod middleware;
 mod pve_client;
 mod services;
 
-use axum::{
-    routing::{delete, get, post, put},
-    Router,
-};
+use axum::{routing::{delete, get, post, put}, Router};
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -71,8 +68,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/audit-logs", get(list_audit_logs))
         .route("/api/stats/system", get(get_system_stats))
         .layer(
-            ServiceBuilder::new()
-                .layer(CorsLayer::permissive())
+            ServiceBuilder::new().layer(CorsLayer::permissive()),
         )
         .with_state(pool);
 
