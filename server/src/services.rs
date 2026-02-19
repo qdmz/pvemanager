@@ -60,7 +60,7 @@ impl AuthService {
     }
 
     pub async fn get_user_by_id(pool: &DbPool, user_id: Uuid) -> Result<User> {
-        let user = sqlx::query_as::<Postgres, User>("SELECT * FROM users WHERE id = $1",)
+        let user = sqlx::query_as::<Postgres, User>("SELECT * FROM users WHERE id = $1")
             .bind(user_id)
             .fetch_optional(pool)
             .await?
@@ -133,7 +133,7 @@ impl VmService {
     }
 
     pub async fn update_vm_status(pool: &DbPool, vm_id: Uuid, status: &str) -> Result<()> {
-        sqlx::query("UPDATE virtual_machines SET status = $1, updated_at = $2 WHERE id = $3",)
+        sqlx::query("UPDATE virtual_machines SET status = $1, updated_at = $2 WHERE id = $3")
             .bind(status)
             .bind(Utc::now())
             .bind(vm_id)
@@ -144,7 +144,7 @@ impl VmService {
     }
 
     pub async fn delete_vm(pool: &DbPool, vm_id: Uuid) -> Result<()> {
-        sqlx::query("DELETE FROM virtual_machines WHERE id = $1",)
+        sqlx::query("DELETE FROM virtual_machines WHERE id = $1")
             .bind(vm_id)
             .execute(pool)
             .await?;
