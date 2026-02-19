@@ -1,5 +1,5 @@
 # 构建阶段
-FROM rust:1.75-alpine AS builder
+FROM rustlang/rust:nightly-alpine AS builder
 
 WORKDIR /app
 
