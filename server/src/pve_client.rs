@@ -68,9 +68,9 @@ impl PveClient {
 
     pub async fn start_vm(&self, node: &str, vmid: i32) -> Result<Value> {
         let url = format!(
-            "{}/api2/json/nodes/{}/qemu/{}/status/start",
-            self.base_url, node, vmid
-        );
+    "{}/api2/json/nodes/{}/qemu/{}/status/current",
+    self.base_url, node, vmid
+);
         let response: Value = self.post(&url, &Value::Null).await?;
         Ok(response)
     }
