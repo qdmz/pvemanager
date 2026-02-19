@@ -1,0 +1,11 @@
+host = "0.0.0.0"
+port = 8080
+
+database_url = "postgresql://postgres:postgres@localhost/pve_manager"
+
+jwt_secret = "your-super-secret-jwt-key-change-this-in-production"
+
+pve_url = "https://192.168.1.100:8006"
+pve_username = "root@pam"
+pve_password = "your-pve-password"
+pve_realm = "pam"

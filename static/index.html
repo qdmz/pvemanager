@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVE Manager - Proxmox VE 管理系统</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 登录页面 -->
+        <div id="login-page" class="login-container">
+            <div class="login-box">
+                <div class="login-header">
+                    <h1>PVE Manager</h1>
+                    <p>Proxmox VE 虚拟化管理平台</p>
+                </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" name="email" required placeholder="请输入邮箱">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" name="password" required placeholder="请输入密码">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">登录</button>
+                    <div class="login-footer">
+                        <a href="#register">注册账号</a>
+                        <span>默认管理员: admin@pve.local / admin123</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 主应用 -->
+        <div id="main-app" class="hidden">
+            <!-- 顶部导航 -->
+            <nav class="navbar">
+                <div class="navbar-brand">
+                    <span class="logo">PVE</span>
+                    <span class="brand-text">Manager</span>
+                </div>
+                <div class="navbar-menu">
+                    <button class="nav-item active" data-page="dashboard">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        控制台
+                    </button>
+                    <button class="nav-item" data-page="vms">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6" y2="6"></line>
+                            <line x1="6" y1="18" x2="6" y2="18"></line>
+                        </svg>
+                        虚拟机
+                    </button>
+                    <button class="nav-item" data-page="firewall">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path d="M2 17l10 5 10-5"></path>
+                            <path d="M2 12l10 5 10-5"></path>
+                        </svg>
+                        防火墙
+                    </button>
+                    <button class="nav-item" data-page="logs">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        日志
+                    </button>
+                </div>
+                <div class="navbar-user">
+                    <span class="user-name" id="username-display">用户</span>
+                    <button class="btn-logout" id="logout-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        退出
+                    </button>
+                </div>
+            </nav>
+
+            <!-- 主内容区 -->
+            <div class="main-content">
+                <!-- 控制台页面 -->
+                <div id="page-dashboard" class="page active">
+                    <div class="page-header">
+                        <h2>控制台</h2>
+                        <p class="subtitle">系统概览和实时监控</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon cpu">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                                    <rect x="9" y="9" width="6" height="6"></rect>
+                                    <line x1="9" y1="1" x2="9" y2="4"></line>
+                                    <line x1="15" y1="1" x2="15" y2="4"></line>
+                                    <line x1="9" y1="20" x2="9" y2="23"></line>
+                                    <line x1="15" y1="20" x2="15" y2="23"></line>
+                                    <line x1="20" y1="9" x2="23" y2="9"></line>
+                                    <line x1="20" y1="14" x2="23" y2="14"></line>
+                                    <line x1="1" y1="9" x2="4" y2="9"></line>
+                                    <line x1="1" y1="14" x2="4" y2="14"></line>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">CPU 使用率</p>
+                                <p class="stat-value" id="cpu-usage">35.5%</p>
+                                <div class="stat-bar">
+                                    <div class="stat-bar-fill" style="width: 35.5%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon memory">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 12h20"></path>
+                                    <path d="M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"></path>
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">内存使用</p>
+                                <p class="stat-value" id="memory-usage">62.3%</p>
+                                <div class="stat-bar">
+                                    <div class="stat-bar-fill" style="width: 62.3%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon disk">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">磁盘使用</p>
+                                <p class="stat-value" id="disk-usage">48.7%</p>
+                                <div class="stat-bar">
+                                    <div class="stat-bar-fill" style="width: 48.7%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon network">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                                    <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                                    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                                    <line x1="12" y1="20" x2="12" y2="20"></line>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">网络流量</p>
+                                <p class="stat-value" id="network-usage">1.5 MB/s</p>
+                                <div class="stat-bar">
+                                    <div class="stat-bar-fill" style="width: 25%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-cards">
+                        <div class="info-card">
+                            <h3>快速操作</h3>
+                            <div class="quick-actions">
+                                <button class="quick-action" onclick="navigateTo('vms')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                    创建虚拟机
+                                </button>
+                                <button class="quick-action" onclick="navigateTo('firewall')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                        <path d="M2 17l10 5 10-5"></path>
+                                        <path d="M2 12l10 5 10-5"></path>
+                                    </svg>
+                                    管理防火墙
+                                </button>
+                                <button class="quick-action" onclick="navigateTo('logs')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    查看日志
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3>系统信息</h3>
+                            <div class="system-info">
+                                <div class="info-row">
+                                    <span class="info-label">PVE 版本</span>
+                                    <span class="info-value">8.1.4</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">节点数量</span>
+                                    <span class="info-value">3</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">运行中 VM</span>
+                                    <span class="info-value">5</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">已停止 VM</span>
+                                    <span class="info-value">2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 虚拟机页面 -->
+                <div id="page-vms" class="page">
+                    <div class="page-header">
+                        <h2>虚拟机管理</h2>
+                        <p class="subtitle">创建和管理您的虚拟机</p>
+                        <button class="btn btn-primary" id="create-vm-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            创建虚拟机
+                        </button>
+                    </div>
+
+                    <div class="vm-list" id="vm-list">
+                        <!-- 虚拟机列表将通过 JS 动态加载 -->
+                    </div>
+                </div>
+
+                <!-- 防火墙页面 -->
+                <div id="page-firewall" class="page">
+                    <div class="page-header">
+                        <h2>防火墙管理</h2>
+                        <p class="subtitle">配置和管理防火墙规则</p>
+                    </div>
+
+                    <div class="firewall-section">
+                        <div class="section-header">
+                            <h3>防火墙规则</h3>
+                            <button class="btn btn-primary" id="add-firewall-rule-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                添加规则
+                            </button>
+                        </div>
+                        <div class="firewall-rules" id="firewall-rules">
+                            <!-- 防火墙规则将通过 JS 动态加载 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 日志页面 -->
+                <div id="page-logs" class="page">
+                    <div class="page-header">
+                        <h2>操作日志</h2>
+                        <p class="subtitle">系统操作审计日志</p>
+                    </div>
+
+                    <div class="logs-container">
+                        <div class="logs-list" id="logs-list">
+                            <!-- 日志将通过 JS 动态加载 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态框 - 创建虚拟机 -->
+        <div id="modal-create-vm" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>创建虚拟机</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <form id="create-vm-form">
+                    <div class="form-group">
+                        <label for="vm-name">虚拟机名称</label>
+                        <input type="text" id="vm-name" name="name" required placeholder="输入虚拟机名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="vm-cpu">CPU 核心数</label>
+                        <input type="number" id="vm-cpu" name="cpu_cores" min="1" max="32" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vm-memory">内存 (MB)</label>
+                        <input type="number" id="vm-memory" name="memory_mb" min="512" step="512" value="2048" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vm-disk">磁盘大小 (GB)</label>
+                        <input type="number" id="vm-disk" name="disk_gb" min="10" value="50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vm-node">节点</label>
+                        <select id="vm-node" name="node" required>
+                            <option value="node1">Node 1</option>
+                            <option value="node2">Node 2</option>
+                            <option value="node3">Node 3</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-cancel">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 提示消息 -->
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

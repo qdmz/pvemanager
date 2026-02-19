@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pve-manager-db
+    environment:
+      POSTGRES_DB: pve_manager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pve-manager-server
+    ports:
+      - "8080:8080"
+    environment:
+      RUST_LOG: pve_server=debug,tower_http=debug,axum=trace
+      PVE_HOST: 0.0.0.0
+      PVE_PORT: 8080
+      PVE_DATABASE_URL: postgresql://postgres:postgres@postgres/pve_manager
+      PVE_JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      PVE_PVE_URL: https://192.168.1.100:8006
+      PVE_PVE_USERNAME: root@pam
+      PVE_PVE_PASSWORD: your-pve-password
+      PVE_PVE_REALM: pam
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config
+
+volumes:
+  postgres_data:

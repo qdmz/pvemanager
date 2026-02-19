@@ -1,0 +1,7 @@
+/target
+**/*.rs.bk
+.env
+.DS_Store
+*.log
+node_modules
+dist
