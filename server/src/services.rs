@@ -138,19 +138,13 @@ impl VmService {
         Ok(vm)
     }
 
-    pub async fn update_vm_status(
-        pool: &DbPool,
-        vm_id: Uuid,
-        status: &str,
-    ) -> Result<()> {
-        sqlx::query(
-            "UPDATE virtual_machines SET status = $1, updated_at = $2 WHERE id = $3"
-        )
-        .bind(status)
-        .bind(Utc::now())
-        .bind(vm_id)
-        .execute(pool)
-        .await?;
+    pub async fn update_vm_status(pool: &DbPool, vm_id: Uuid, status: &str) -> Result<()> {
+        sqlx::query("UPDATE virtual_machines SET status = $1, updated_at = $2 WHERE id = $3")
+            .bind(status)
+            .bind(Utc::now())
+            .bind(vm_id)
+            .execute(pool)
+            .await?;
 
         Ok(())
     }
@@ -206,7 +200,7 @@ impl AuditService {
                 WHERE user_id = $1
                 ORDER BY created_at DESC
                 LIMIT $2 OFFSET $3
-                "#
+                "#,
             )
             .bind(user)
             .bind(limit)
