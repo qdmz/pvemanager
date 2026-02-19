@@ -2,36 +2,39 @@ mod config;
 mod db;
 mod handlers;
 mod middleware;
-mod services;
 mod pve_client;
+mod services;
 
 use axum::{
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Router,
 };
-use tower_http::cors::CorsLayer;
 use tower::ServiceBuilder;
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use config::Config;
 use handlers::{
-    auth::{login, register},
-    vm::{
-        list_vms, get_vm, create_vm, update_vm, delete_vm,
-        vm_action, get_vm_snapshots, create_snapshot, delete_snapshot,
-    },
-    firewall::{list_firewall_rules, create_firewall_rule, delete_firewall_rule, update_firewall_rule},
     audit::list_audit_logs,
+    auth::{login, register},
+    firewall::{
+        create_firewall_rule, delete_firewall_rule, list_firewall_rules, update_firewall_rule,
+    },
     stats::get_system_stats,
+    vm::{
+        create_snapshot, create_vm, delete_snapshot, delete_vm, get_vm, get_vm_snapshots, list_vms,
+        update_vm, vm_action,
+    },
 };
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // 初始化日志
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "pve_server=debug,tower_http=debug,axum=trace".into()),
-        ))
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "pve_server=debug,tower_http=debug,axum=trace".into()),
+        )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -57,7 +60,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/vms/:id/action", post(vm_action))
         .route("/api/vms/:id/snapshots", get(get_vm_snapshots))
         .route("/api/vms/:id/snapshots", post(create_snapshot))
-        .route("/api/vms/:id/snapshots/:snapshot_id", delete(delete_snapshot))
+        .route(
+            "/api/vms/:id/snapshots/:snapshot_id",
+            delete(delete_snapshot),
+        )
         .route("/api/vms/:id/firewall", get(list_firewall_rules))
         .route("/api/vms/:id/firewall", post(create_firewall_rule))
         .route("/api/firewall/:id", put(update_firewall_rule))

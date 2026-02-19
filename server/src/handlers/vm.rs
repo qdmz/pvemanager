@@ -65,7 +65,8 @@ pub async fn create_vm(
         req.disk_gb,
         req.node,
         user.id,
-    ).await?;
+    )
+    .await?;
 
     // 记录审计日志
     AuditService::log_action(
@@ -76,7 +77,8 @@ pub async fn create_vm(
         Some(vm.id.to_string()),
         Some(serde_json::json!({ "vm_name": vm.name })),
         None,
-    ).await?;
+    )
+    .await?;
 
     Ok(Json(ApiResponse {
         success: true,
@@ -194,7 +196,7 @@ pub async fn get_vm_snapshots(
     }
 
     let snapshots = sqlx::query_as::<_, VmSnapshot>(
-        "SELECT * FROM vm_snapshots WHERE vm_id = $1 ORDER BY created_at DESC"
+        "SELECT * FROM vm_snapshots WHERE vm_id = $1 ORDER BY created_at DESC",
     )
     .bind(id)
     .fetch_all(&pool)
@@ -225,7 +227,7 @@ pub async fn create_snapshot(
         INSERT INTO vm_snapshots (vm_id, name, description, created_by)
         VALUES ($1, $2, $3, $4)
         RETURNING *
-        "#
+        "#,
     )
     .bind(id)
     .bind(&req.name)
