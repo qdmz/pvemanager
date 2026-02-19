@@ -57,7 +57,7 @@ impl PveClient {
     pub async fn list_vms(&self) -> Result<Vec<Value>> {
         let url = format!("{}/api2/json/cluster/resources?type=vm", self.base_url);
         let response: Value = self.get(&url).await?;
-        Ok(response["data"].as_array().unwrap().to_vec())
+        Ok(response["data"].as_array().unwrap().to_vec());
     }
 
     pub async fn get_vm_status(&self, node: &str, vmid: i32) -> Result<Value> {
@@ -113,9 +113,13 @@ impl PveClient {
     }
 
     async fn get(&self, url: &str) -> Result<Value> {
-        let response = self.client
+        let response = self
+            .client
             .get(url)
-            .header("Cookie", &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()))
+            .header(
+                "Cookie",
+                &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()),
+            )
             .send()
             .await?;
 
@@ -123,9 +127,13 @@ impl PveClient {
     }
 
     async fn post(&self, url: &str, body: &Value) -> Result<Value> {
-        let response = self.client
+        let response = self
+            .client
             .post(url)
-            .header("Cookie", &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()))
+            .header(
+                "Cookie",
+                &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()),
+            )
             .header("CSRFPreventionToken", self.csrf_token.as_ref().unwrap())
             .json(body)
             .send()
@@ -135,9 +143,13 @@ impl PveClient {
     }
 
     async fn delete(&self, url: &str) -> Result<Value> {
-        let response = self.client
+        let response = self
+            .client
             .delete(url)
-            .header("Cookie", &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()))
+            .header(
+                "Cookie",
+                &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()),
+            )
             .header("CSRFPreventionToken", self.csrf_token.as_ref().unwrap())
             .send()
             .await?;
