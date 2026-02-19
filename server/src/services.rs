@@ -53,8 +53,8 @@ impl AuthService {
         .await?
         .ok_or_else(|| AppError::Unauthorized)?;
 
-        let is_valid = verify(password, &user.password_hash)
-            .map_err(|e| AppError::Internal(e.to_string()))?;
+        let is_valid =
+            verify(password, &user.password_hash).map_err(|e| AppError::Internal(e.to_string()))?;
 
         if !is_valid {
             return Err(AppError::Unauthorized);
@@ -64,13 +64,11 @@ impl AuthService {
     }
 
     pub async fn get_user_by_id(pool: &DbPool, user_id: Uuid) -> Result<User> {
-        let user = sqlx::query_as::<Postgres, User>(
-            "SELECT * FROM users WHERE id = $1"
-        )
-        .bind(user_id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("User not found".to_string()))?;
+        let user = sqlx::query_as::<Postgres, User>("SELECT * FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or_else(|| AppError::NotFound("User not found".to_string()))?;
 
         Ok(user)
     }
@@ -80,14 +78,14 @@ impl VmService {
     pub async fn list_vms(pool: &DbPool, owner_id: Option<Uuid>) -> Result<Vec<VirtualMachine>> {
         let vms = if let Some(owner) = owner_id {
             sqlx::query_as::<Postgres, VirtualMachine>(
-                "SELECT * FROM virtual_machines WHERE owner_id = $1 ORDER BY created_at DESC"
+                "SELECT * FROM virtual_machines WHERE owner_id = $1 ORDER BY created_at DESC",
             )
             .bind(owner)
             .fetch_all(pool)
             .await?
         } else {
             sqlx::query_as::<Postgres, VirtualMachine>(
-                "SELECT * FROM virtual_machines ORDER BY created_at DESC"
+                "SELECT * FROM virtual_machines ORDER BY created_at DESC",
             )
             .fetch_all(pool)
             .await?
@@ -97,13 +95,11 @@ impl VmService {
     }
 
     pub async fn get_vm(pool: &DbPool, vm_id: Uuid) -> Result<VirtualMachine> {
-        let vm = sqlx::query_as::<Postgres, VirtualMachine>(
-            "SELECT * FROM virtual_machines WHERE id = $1"
-        )
-        .bind(vm_id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("Virtual machine not found".to_string()))?;
+        let vm = sqlx::query_as::<Postgres, VirtualMachine>("SELECT * FROM virtual_machines WHERE id = $1")
+            .bind(vm_id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Virtual machine not found".to_string()))?;
 
         Ok(vm)
     }
@@ -122,7 +118,7 @@ impl VmService {
             INSERT INTO virtual_machines (vmid, name, status, cpu_cores, memory_mb, disk_gb, node, owner_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
-            "#
+            "#,
         )
         .bind(100) // 简化版，实际应该自动生成 vmid
         .bind(name)
