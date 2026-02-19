@@ -61,37 +61,61 @@ impl PveClient {
     }
 
     pub async fn get_vm_status(&self, node: &str, vmid: i32) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/qemu/{}/status/current", self.base_url, node, vmid);
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu/{}/status/current",
+            self.base_url, node, vmid
+        );
         let response: Value = self.get(&url).await?;
         Ok(response["data"].clone())
     }
 
     pub async fn start_vm(&self, node: &str, vmid: i32) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/qemu/{}/status/start", self.base_url, node, vmid);
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu/{}/status/start",
+            self.base_url, node, vmid
+        );
         let response: Value = self.post(&url, &Value::Null).await?;
         Ok(response)
     }
 
     pub async fn stop_vm(&self, node: &str, vmid: i32) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/qemu/{}/status/stop", self.base_url, node, vmid);
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu/{}/status/stop",
+            self.base_url, node, vmid
+        );
         let response: Value = self.post(&url, &Value::Null).await?;
         Ok(response)
     }
 
     pub async fn create_vm(&self, node: &str, params: &Value) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/qemu", self.base_url, node);
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu",
+            self.base_url, node
+        );
         let response: Value = self.post(&url, params).await?;
         Ok(response)
     }
 
     pub async fn delete_vm(&self, node: &str, vmid: i32) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/qemu/{}", self.base_url, node, vmid);
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu/{}",
+            self.base_url, node, vmid
+        );
         let response: Value = self.delete(&url).await?;
         Ok(response)
     }
 
-    pub async fn create_snapshot(&self, node: &str, vmid: i32, name: &str, description: Option<&str>) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/qemu/{}/snapshot", self.base_url, node, vmid);
+    pub async fn create_snapshot(
+        &self,
+        node: &str,
+        vmid: i32,
+        name: &str,
+        description: Option<&str>,
+    ) -> Result<Value> {
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu/{}/snapshot",
+            self.base_url, node, vmid
+        );
         let mut params = serde_json::json!({ "snapname": name });
         if let Some(desc) = description {
             params["description"] = serde_json::json!(desc);
@@ -101,13 +125,19 @@ impl PveClient {
     }
 
     pub async fn list_snapshots(&self, node: &str, vmid: i32) -> Result<Vec<Value>> {
-        let url = format!("{}/api2/json/nodes/{}/qemu/{}/snapshot", self.base_url, node, vmid);
+        let url = format!(
+            "{}/api2/json/nodes/{}/qemu/{}/snapshot",
+            self.base_url, node, vmid
+        );
         let response: Value = self.get(&url).await?;
         Ok(response["data"].as_array().unwrap().to_vec())
     }
 
     pub async fn get_node_stats(&self, node: &str) -> Result<Value> {
-        let url = format!("{}/api2/json/nodes/{}/status", self.base_url, node);
+        let url = format!(
+            "{}/api2/json/nodes/{}/status",
+            self.base_url, node
+        );
         let response: Value = self.get(&url).await?;
         Ok(response["data"].clone())
     }
