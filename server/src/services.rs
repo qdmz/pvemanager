@@ -1,6 +1,6 @@
+use crate::db::DbPool;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
-use crate::db::DbPool;
 use pve_shared::{
     error::{AppError, Result},
     models::{AuditLog, FirewallRule, User, UserRole, VirtualMachine, VmSnapshot},
@@ -19,15 +19,15 @@ impl AuthService {
         email: String,
         password: String,
     ) -> Result<User> {
-        let password_hash = hash(&password, DEFAULT_COST)
-            .map_err(|e| AppError::Internal(e.to_string()))?;
+        let password_hash =
+            hash(&password, DEFAULT_COST).map_err(|e| AppError::Internal(e.to_string()))?;
 
         let user = sqlx::query_as::<Postgres, User>(
             r#"
             INSERT INTO users (username, email, password_hash, role, is_active)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING *
-            "#
+            "#,
         )
         .bind(username)
         .bind(email)
@@ -40,13 +40,9 @@ impl AuthService {
         Ok(user)
     }
 
-    pub async fn verify_user(
-        pool: &DbPool,
-        email: &str,
-        password: &str,
-    ) -> Result<User> {
+    pub async fn verify_user(pool: &DbPool, email: &str, password: &str) -> Result<User> {
         let user = sqlx::query_as::<Postgres, User>(
-            "SELECT * FROM users WHERE email = $1 AND is_active = true"
+            "SELECT * FROM users WHERE email = $1 AND is_active = true",
         )
         .bind(email)
         .fetch_optional(pool)
@@ -64,7 +60,7 @@ impl AuthService {
     }
 
     pub async fn get_user_by_id(pool: &DbPool, user_id: Uuid) -> Result<User> {
-        let user = sqlx::query_as::<Postgres, User>("SELECT * FROM users WHERE id = $1")
+        let user = sqlx::query_as::<Postgres, User>("SELECT * FROM users WHERE id = $1",)
             .bind(user_id)
             .fetch_optional(pool)
             .await?
@@ -95,11 +91,13 @@ impl VmService {
     }
 
     pub async fn get_vm(pool: &DbPool, vm_id: Uuid) -> Result<VirtualMachine> {
-        let vm = sqlx::query_as::<Postgres, VirtualMachine>("SELECT * FROM virtual_machines WHERE id = $1")
-            .bind(vm_id)
-            .fetch_optional(pool)
-            .await?
-            .ok_or_else(|| AppError::NotFound("Virtual machine not found".to_string()))?;
+        let vm = sqlx::query_as::<Postgres, VirtualMachine>(
+            "SELECT * FROM virtual_machines WHERE id = $1",
+        )
+        .bind(vm_id)
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| AppError::NotFound("Virtual machine not found".to_string()))?;
 
         Ok(vm)
     }
@@ -135,7 +133,7 @@ impl VmService {
     }
 
     pub async fn update_vm_status(pool: &DbPool, vm_id: Uuid, status: &str) -> Result<()> {
-        sqlx::query("UPDATE virtual_machines SET status = $1, updated_at = $2 WHERE id = $3")
+        sqlx::query("UPDATE virtual_machines SET status = $1, updated_at = $2 WHERE id = $3",)
             .bind(status)
             .bind(Utc::now())
             .bind(vm_id)
@@ -146,7 +144,7 @@ impl VmService {
     }
 
     pub async fn delete_vm(pool: &DbPool, vm_id: Uuid) -> Result<()> {
-        sqlx::query("DELETE FROM virtual_machines WHERE id = $1")
+        sqlx::query("DELETE FROM virtual_machines WHERE id = $1",)
             .bind(vm_id)
             .execute(pool)
             .await?;
