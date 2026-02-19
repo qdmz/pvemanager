@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use validator::Validate;
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginRequest {

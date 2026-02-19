@@ -32,7 +32,10 @@ pub type Result<T> = std::result::Result<T, AppError>;
 impl axum::response::IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let (status, message) = match &self {
-            AppError::Database(_) | AppError::Internal(_) => (axum::http::StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
+            AppError::Database(_) | AppError::Internal(_) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                self.to_string(),
+            ),
             AppError::Unauthorized => (axum::http::StatusCode::UNAUTHORIZED, self.to_string()),
             AppError::Forbidden(_) => (axum::http::StatusCode::FORBIDDEN, self.to_string()),
             AppError::NotFound(_) => (axum::http::StatusCode::NOT_FOUND, self.to_string()),

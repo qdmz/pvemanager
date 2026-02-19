@@ -219,7 +219,7 @@ impl AuditService {
                 SELECT * FROM audit_logs
                 ORDER BY created_at DESC
                 LIMIT $1 OFFSET $2
-                "#
+                "#,
             )
             .bind(limit)
             .bind(offset)
