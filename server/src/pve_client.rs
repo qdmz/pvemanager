@@ -101,7 +101,7 @@ impl PveClient {
             "{}/api2/json/nodes/{}/qemu/{}/snapshot",
             self.base_url,
             node,
-            vmid
+            vmid,
         );
         let mut params = serde_json::json!({ "snapname": name });
         if let Some(desc) = description {
@@ -116,7 +116,7 @@ impl PveClient {
             "{}/api2/json/nodes/{}/qemu/{}/snapshot",
             self.base_url,
             node,
-            vmid
+            vmid,
         );
         let response: Value = self.get(&url).await?;
         Ok(response["data"].as_array().unwrap().to_vec())
@@ -132,7 +132,10 @@ impl PveClient {
         let response = self
             .client
             .get(url)
-            .header("Cookie", &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()))
+            .header(
+                "Cookie",
+                &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()),
+            )
             .send()
             .await?;
 
@@ -143,7 +146,10 @@ impl PveClient {
         let response = self
             .client
             .post(url)
-            .header("Cookie", &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()))
+            .header(
+                "Cookie",
+                &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()),
+            )
             .header("CSRFPreventionToken", self.csrf_token.as_ref().unwrap())
             .json(body)
             .send()
@@ -156,7 +162,10 @@ impl PveClient {
         let response = self
             .client
             .delete(url)
-            .header("Cookie", &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()))
+            .header(
+                "Cookie",
+                &format!("PVEAuthCookie={}", self.ticket.as_ref().unwrap()),
+            )
             .header("CSRFPreventionToken", self.csrf_token.as_ref().unwrap())
             .send()
             .await?;
